@@ -13,10 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.*;
 
 
 public class CopyPictures {
@@ -223,7 +220,7 @@ public class CopyPictures {
         KopierenFenster.setCloseable(true);
     }
 
-    public static void readFile(ArrayList<File> Bilder, File file, boolean Unterordnereinbeziehen, int Dateien, ArrayList<String> benutzerdefnierteDateien) {
+    public static void readFile(List<File> Bilder, File file, boolean Unterordnereinbeziehen, int Dateien, ArrayList<String> benutzerdefnierteDateien) {
         File[] Unterordner = file.listFiles();
         if (Unterordner == null) {
             return;
@@ -233,7 +230,7 @@ public class CopyPictures {
                 if (Unterordnereinbeziehen) {
                     readFile(Bilder, subfile, true, Dateien, benutzerdefnierteDateien);
                 }
-            } else {
+            } else if (!subfile.getName().startsWith("._")) {
                 switch (Dateien) {
                     case 0:
                         try {
@@ -296,6 +293,7 @@ public class CopyPictures {
             }
         } catch (Exception e) {
             System.out.println("Cannot determine metadata of file: " + Quelle);
+            e.printStackTrace();
         }
 
         if (date == null) {

@@ -6,7 +6,7 @@
 
     <groupId>de.secretj12.copypictures</groupId>
     <artifactId>CopyPictures</artifactId>
-    <version>4.3</version>
+    <version>4.4</version>
 
     <properties>
         <maven.compiler.source>18</maven.compiler.source>
@@ -24,6 +24,9 @@
                             <mainClass>de.secretj12.copypictures.CopyPictures</mainClass>
                         </manifest>
                     </archive>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <finalName>${project.artifactId}-${project.version}</finalName>
+
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>

@@ -21,7 +21,7 @@ import java.util.Date;
 
 public class CopyPictures {
     public static Fenster Window;
-    public static final String version = "4.3";
+    public static final String version = "4.4";
     public static final boolean isWin = System.getProperty("os.name").toLowerCase().contains("win");
     public static final String home = System.getProperty("user.home");
     public static final String cfgFile = isWin ? "C:/CopyPictures/config.txt" : "~/.copypictures/config.cfg";
@@ -163,7 +163,7 @@ public class CopyPictures {
 
         ArrayList<File> Bilder = new ArrayList<>();
         ArrayList<String> benutzerdefinierteDateienArray = new ArrayList<>(Arrays.asList(benutzerdefinierteDateien.toLowerCase().split(";")));
-        if (benutzerdefinierteDateienArray.size() == 0) benutzerdefinierteDateienArray.add(benutzerdefinierteDateien);
+        if (benutzerdefinierteDateienArray.isEmpty()) benutzerdefinierteDateienArray.add(benutzerdefinierteDateien);
         readFile(Bilder, Quelle, Unterordnereinbeziehen, Dateien, benutzerdefinierteDateienArray);
 
         System.out.println(Bilder.size() + " Bilder gefunden!");
@@ -237,7 +237,8 @@ public class CopyPictures {
                 switch (Dateien) {
                     case 0:
                         try {
-                            if (Files.probeContentType(subfile.toPath()).split("/")[0].equals("image"))
+                            String contentType = Files.probeContentType(subfile.toPath());
+                            if (contentType != null && contentType.contains("image"))
                                 Bilder.add(subfile);
                         } catch (IOException e) {
                             System.err.println("Error reading metadata of file");
@@ -261,26 +262,40 @@ public class CopyPictures {
         Date date = null;
 
         try {
-            Metadata Bild = ImageMetadataReader.readMetadata(Quelle);
+            Metadata bild = ImageMetadataReader.readMetadata(Quelle);
             SimpleDateFormat format = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss");
-            for (Directory directory : Bild.getDirectories()) {
-                if (directory.getName().equals("Exif IFD0"))
+            SimpleDateFormat movAppleFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            for (Directory directory : bild.getDirectories()) {
+                if (directory.getName().equals("Exif IFD0")) {
                     for (Tag tag : directory.getTags()) {
                         if (tag.getTagName().equals("Date/Time")) {
                             String PicDate = tag.getDescription();
                             try {
                                 date = format.parse(PicDate);
                             } catch (ParseException e) {
-                                System.err.println("Error parsing file");
+                                System.err.println("Error parsing file: ");
                                 System.exit(1);
                             }
                         }
                     }
+                }
+                if (directory.getName().equals("QuickTime Metadata")) {
+                    for (Tag tag : directory.getTags()) {
+                        if (tag.getTagName().equals("Creation Date")) {
+                            String PicDate = tag.getDescription().substring(0, 19);
+                            try {
+                                date = movAppleFormat.parse(PicDate);
+                            } catch (ParseException e) {
+                                System.err.println("Error parsing file: ");
+                                e.printStackTrace();
+                                System.exit(1);
+                            }
+                        }
+                    }
+                }
             }
         } catch (Exception e) {
-
-            System.err.println("Error parsing file");
-            System.exit(1);
+            System.out.println("Cannot determine metadata of file: " + Quelle);
         }
 
         if (date == null) {
